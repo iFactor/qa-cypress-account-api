@@ -1,0 +1,83 @@
+# Cypress files #
+cypress.env.json
+*/cypress/videos
+*/cypress/screenshots
+node_modules/
+.npminstall
+npm-debug.log
+cypress/results
+mochawesome-report/
+mochawesome.json
+cypress/logs
+cypress/fixtures/auth.json
+cypress/uploadfiles
+cypress/screenshots/
+cypress/videos/
+reports/
+
+
+# Compiled class files #
+*.class
+
+# Config files #
+config.properties
+
+# Log files #
+*.log
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Windows #
+Thumbs.db
+Desktop.ini
+
+# Mac #
+.DS_Store
+
+# Maven #
+log/
+target/
+
+# testing #
+coverage
+
+# production #
+build
+
+# IDEs and editors
+.idea
+.project
+.classpath
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# misc #
+.env
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+yarn.lock
+.scannerwork
+/dist
+/tmp
+temp/
+.nyc_output
+coverage
+posted.json
+.vscode/
+junit.xml
+chrome-profiler-events*.json
+sc-client-react.iml
+
+#mock data #
+public/mocks

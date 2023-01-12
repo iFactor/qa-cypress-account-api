@@ -1,0 +1,31 @@
+{
+  "envName": "qa",
+  "baseUrl": "https://api.qa.kubra.io",
+  "classicUrl": "",
+  "experimentalStudio": true,
+  "experimentalSessionAndOrigin": false,
+  "viewportWidth": 1920,
+  "viewportHeight": 1080,
+  "specPattern": "cypress/tests/**/*.{js,jsx,ts,tsx}",
+  "chromeWebSecurity": false,
+  "retries": {
+    "openMode": 0,
+    "runMode": 2
+  },
+  "projectId": "qjwd4e",
+  "env": {
+    "grepFilterSpecs": true,
+    "grepOmitFiltered": true,
+    "browserPermissions": {
+      "notifications": "allow",
+      "geolocation": "allow",
+      "camera": "block",
+      "microphone": "block",
+      "images": "allow",
+      "javascript": "allow",
+      "popups": "ask",
+      "plugins": "ask",
+      "cookies": "allow"
+    }
+  }
+}

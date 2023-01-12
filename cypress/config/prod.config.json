@@ -1,0 +1,32 @@
+{
+  "envName": "prod",
+  "baseUrl": "https://api.kubra.io",
+  "experimentalStudio": true,
+  "experimentalSessionAndOrigin": false,
+  "viewportWidth": 1920,
+  "viewportHeight": 1080,
+  "followRedirect": true,
+  "pageLoadTimeout": 15000,
+  "defaultCommandTimeout": 8000,
+  "specPattern": "cypress/tests/**/*.{js,jsx,ts,tsx}",
+  "chromeWebSecurity": false,
+  "retries": { "openMode": 0, "runMode": 2 },
+  "username": "KubBasicAuthUsername",
+  "password": "KubBasicAuthPassword",
+  "projectId": "qjwd4e",
+  "env": {
+    "grepFilterSpecs": true,
+    "grepOmitFiltered": true,
+    "browserPermissions": {
+      "notifications": "allow",
+      "geolocation": "allow",
+      "camera": "block",
+      "microphone": "block",
+      "images": "allow",
+      "javascript": "allow",
+      "popups": "ask",
+      "plugins": "ask",
+      "cookies": "allow"
+    }
+  }
+}
