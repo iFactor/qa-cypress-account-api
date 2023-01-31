@@ -1,15 +1,13 @@
 import * as fs from 'fs';
-export const host = Cypress.config('baseUrl');
+export const host = 'https://api.dev.kubra.io'
 export const username = Cypress.env('auth_username')
 export const password = atob(Cypress.env('auth_password'))
 export const env = Cypress.config("envName")
 export const contenttype = "application/json"
 export const KUBRAtenantId = 'a8c2b204-1563-4a9a-9581-72f0cf71e5ef'
 export const InvalidKUBRAtenantId = 'a8c2b204-1563-4a9a-9581-72f0cf71234'
-export const namespacesEndpoint = 'https://api.qa.kubra.io/account/v1/namespaces'
-export const invalidNamespacesEndpoint = 'https://api.qa.kubra.io/account/v1/namespaces-s'
-
-
+export const namespacesEndpoint = host + '/account/v1/namespaces' 
+export const invalidNamespacesEndpoint = host + '/account/v1/namespaces-s'
 
 export const deleteDownloadsFolder = () => {
     const downloadsFolder = Cypress.config('downloadsFolder')
