@@ -8,6 +8,7 @@ export const KUBRAtenantId = 'a8c2b204-1563-4a9a-9581-72f0cf71e5ef'
 export const InvalidKUBRAtenantId = 'a8c2b204-1563-4a9a-9581-72f0cf71234'
 export const namespacesEndpoint = host + '/account/v1/namespaces' 
 export const invalidNamespacesEndpoint = host + '/account/v1/namespaces-s'
+export const invalidNamespaceid = host + '/account/v1/namespaces/bc9ec323-153b-4872-98d7-233f57ba1234'
 
 export const deleteDownloadsFolder = () => {
     const downloadsFolder = Cypress.config('downloadsFolder')
@@ -30,8 +31,7 @@ export const generateUUID = () => {
     });
 }
 
-export const PostCall = (endpoint, _body, _auth =  { bearer: `${Cypress.env("DefaultAuth0Token")}` }) => {
-    
+export const PostCall = (endpoint, _body, _auth = { bearer: `${Cypress.env("DefaultAuth0Token")}` }) => {  
     return cy.request({
         method: 'POST',
         failOnStatusCode: false,
