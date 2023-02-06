@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-export const host = 'https://api.dev.kubra.io'
+export const host = Cypress.config('baseUrl');
 export const username = Cypress.env('auth_username')
 export const password = atob(Cypress.env('auth_password'))
 export const env = Cypress.config("envName")
@@ -9,6 +9,7 @@ export const InvalidKUBRAtenantId = 'a8c2b204-1563-4a9a-9581-72f0cf71234'
 export const namespacesEndpoint = host + '/account/v1/namespaces' 
 export const invalidNamespacesEndpoint = host + '/account/v1/namespaces-s'
 export const invalidNamespaceid = host + '/account/v1/namespaces/bc9ec323-153b-4872-98d7-233f57ba1234'
+export const invalidAccountEndpoint = invalidNamespaceid + '/accounts'
 
 export const deleteDownloadsFolder = () => {
     const downloadsFolder = Cypress.config('downloadsFolder')
@@ -38,6 +39,10 @@ export const PostCall = (endpoint, _body, _auth = { bearer: `${Cypress.env("Defa
         url: endpoint,
         auth: _auth,
         body: _body,
+        headers: {
+            'Content-Type': contenttype,
+            'KUBRA-tenantId': KUBRAtenantId,
+        }
     })
 }
 
@@ -47,12 +52,16 @@ export const GetCall = (endpoint, _auth = { bearer: `${Cypress.env("DefaultAuth0
         failOnStatusCode: false,
         url: endpoint,
         auth: _auth,
+        headers: {
+            'Content-Type': contenttype,
+            'KUBRA-tenantId': KUBRAtenantId,
+        },
     })
 }
 
-export const PutCall = (endpoint, _body,  _auth = { bearer: `${Cypress.env("DefaultAuth0Token")}` }) => {
+export const PatchCall = (endpoint, _body,  _auth = { bearer: `${Cypress.env("DefaultAuth0Token")}` }) => {
     return cy.request({
-        method: 'PUT',
+        method: 'PATCH',
         failOnStatusCode: false,
         url: endpoint,
         auth: _auth,
