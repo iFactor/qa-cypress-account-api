@@ -7,6 +7,15 @@ import '@4tw/cypress-drag-drop'
 import "cypress-localstorage-commands"
 require('cy-verify-downloads').addCustomCommand()
 
+before(() => {
+  cy.loginWithAuth0().then(t => {
+    //cy.log(JSON.stringify(t));
+    const {access_token, expires_in, id_token} = t.body;
+    //cy.log(access_token);
+    Cypress.env('DefaultAuth0Token', access_token)
+  });
+});
+
 Cypress.Commands.add('loginWithAuth0', (overrides = {}) => {
   Cypress.log({
     name: 'loginWithAuth0',
@@ -18,7 +27,7 @@ Cypress.Commands.add('loginWithAuth0', (overrides = {}) => {
     body: {
       grant_type: 'password',
       username: Cypress.env('auth_username'),
-      password: Cypress.env('auth_password'),
+      password: atob(Cypress.env('auth_password')),
       audience: Cypress.env('auth_audience'),
       client_id: Cypress.env('auth_client_id'),
       client_secret: Cypress.env('auth_client_secret'),
@@ -28,7 +37,7 @@ Cypress.Commands.add('loginWithAuth0', (overrides = {}) => {
   // allow us to override defaults with passed in overrides
   Cypress._.extend(options, overrides);
 
-  cy.request(options);
+  return cy.request(options);
 });
 
 Cypress.Commands.add('loginSACC', (user, password) => {
