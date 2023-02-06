@@ -1,7 +1,7 @@
-import { env as _env, PostCall, GetCall, PutCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint } from '../utils.js';
+import { env as _env, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint, invalidNamespaceid } from '../utils.js';
 let namespaceid = 0;
 
-describe('CRUD operations', { tags: '@smoke' }, () => {  
+describe('CRUD operations', { tags: '@smoke' }, () => {
 
     it('Create namespace', { tags: '@api' }, () => {
 
@@ -9,7 +9,7 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
             {
                 name: 'namespace' + '0' + Math.floor((Math.random() * 999) + 1),
                 description: "Description",
-                country: "US"
+                defaultCountry: "US"
             })
             .then((response) => {
                 expect(response.status).to.eq(201) // Check response status
@@ -21,7 +21,7 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
     })
 
     it('Get specific namespace', { tags: '@api' }, () => {
-        GetCall( namespacesEndpoint + '/'+ namespaceid )
+        GetCall(namespacesEndpoint + '/' + namespaceid)
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
@@ -37,19 +37,19 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
     })
 
     it('Update namespace', { tags: '@api' }, () => {
-        PutCall(namespacesEndpoint + '/'+ namespaceid,
-            { 
-                name: 'updatednamespace' + '1' + Math.floor((Math.random() * 999) + 1),
+        PatchCall(namespacesEndpoint + '/' + namespaceid,
+            {
+                name: 'patchUpdatednamespace' + '1' + Math.floor((Math.random() * 999) + 1),
             })
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
-                expect(JSON.stringify(response.body.name)).to.deep.includes('namespace1')
+                expect(JSON.stringify(response.body.name)).to.deep.includes('patchUpdatednamespace1')
             })
     })
 
     it('Delete namespace', { tags: '@api' }, () => {
-        DeleteCall(namespacesEndpoint + '/'+ namespaceid)
+        DeleteCall(namespacesEndpoint + '/' + namespaceid)
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data    
@@ -64,7 +64,7 @@ describe('Negetive tests', () => {
             {
                 name: 'names' + '0' + Math.floor((Math.random() * 999) + 1),
                 description: "Description",
-                country: "US"
+                defaultCountry: "US"
             })
             .then((response) => {
                 expect(response.status).to.eq(201) // Check response status               
@@ -73,7 +73,7 @@ describe('Negetive tests', () => {
     })
 
     after(() => {
-        DeleteCall(namespacesEndpoint + '/' + namespaceid)
+        DeleteCall(namespacesEndpoint + '/' + negitiveNamespaceid)
             .then((response) => {
                 expect(response.status).to.eq(204) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data    
@@ -85,7 +85,7 @@ describe('Negetive tests', () => {
             {
                 name: 'namespace' + '0' + Math.floor((Math.random() * 999) + 1),
                 description: "Description",
-                country: "US"
+                defaultCountry: "US"
             })
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
@@ -107,6 +107,14 @@ describe('Negetive tests', () => {
 
     it('GET all balancefeed when invalid endpoint', { tags: '@api' }, () => {
         GetCall(invalidNamespacesEndpoint)
+            .then((response) => {
+                expect(response.status).to.eq(404) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+
+    it('GET the specific data with invalid namespace id', { tags: '@api' }, () => {
+        GetCall(invalidNamespaceid)
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
