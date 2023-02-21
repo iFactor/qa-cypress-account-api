@@ -1,5 +1,4 @@
 import { env as _env, generateAccountData, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidAccountEndpoint, invalidKUBRAclientId } from '../utils.js'
-import { isNull } from 'util';
 let externalid = 0;
 let externalid1 = 0;
 let externalid2 = 0;
@@ -106,6 +105,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             cy.log(JSON.stringify(data_by))
@@ -118,6 +118,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account with only billing Address', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             delete data_by.mailingAddress
@@ -135,6 +136,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account with only mailing Address', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             delete data_by.billingAddress
@@ -313,6 +315,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account with unknown field in billingAddress is add', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             data_by.billingAddress.newfield="ABC"
@@ -335,6 +338,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account with null value', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             data_by.billingAddress= null
@@ -351,6 +355,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account with invalid account id', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             PatchCall(invalidAccountid,data_by)
@@ -363,6 +368,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         it('Update account with invalid clientID', { tags: '@api' }, () => {
         //Single-tenant/client User is used, thats the reason for 401 unauthorized
         //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+        //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
         let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             PatchCall(negitiveTestAccountid, data_by,{bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
