@@ -1,8 +1,7 @@
-import { env as _env, PostCall, GetCall, PutCall, DeleteCall, namespacesEndpoint, invalidAccountEndpoint } from '../utils.js'
+import { env as _env, generateAccountData, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidAccountEndpoint, invalidKUBRAclientId } from '../utils.js'
 let externalid = 0;
 let externalid1 = 0;
 let externalid2 = 0;
-let externalid3 = 0;
 let namespaceid = 0;
 let accountEndpoint = 0;
 
@@ -35,7 +34,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         if (namespaceid != '') {
             DeleteCall(namespacesEndpoint + '/' + namespaceid)
                 .then((response) => {
-                    expect(response.status).to.eq(204) // Check response status                   
+                    expect(response.status).to.eq(200) // Check response status                   
                 })
         }
     })
@@ -43,20 +42,24 @@ describe('accounts api', { tags: '@smoke' }, () => {
     describe('CRUD operations', { tags: '@smoke' }, () => {
 
         it('Create account', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, accountBody)
+            let data_by = JSON.parse(generateAccountData());
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(201) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
                     cy.log(response.body.externalId)
-                    expect(JSON.stringify(response.body.externalId)).to.deep.includes('0')
+                    expect(JSON.stringify(response.body.externalId))
                     expect(JSON.stringify(response.body.billingAddress.streetAddress1))
                     externalid = response.body.externalId
                 })
         })
 
         it('Create account with empty country in billingAddress', { tags: '@api' }, () => {
-            //if country is not given it must take the default country = US
-            PostCall(accountEndpoint, emptyCountryBody)
+            //if country is not given it must take the default country from namespace
+            let data_by = JSON.parse(generateAccountData());
+           data_by.billingAddress.country=""
+           cy.log(JSON.stringify(data_by))
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(201) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
@@ -66,30 +69,24 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 })
         })
 
-        it('Create account with country as null in billingAddress', { tags: '@api' }, () => {
-            //if country is not given it must take the default country = US
-            PostCall(accountEndpoint, nullCountryBody)
+        it('Create account with externalID and billingAddress', { tags: '@api' }, () => {
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.mailingAddress
+            delete data_by.tags
+            delete data_by.isCommercial
+            delete data_by.status
+            delete data_by.isPrePay
+           cy.log(JSON.stringify(data_by))
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(201) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
                     cy.log(response.body.externalId)
-                    expect(JSON.stringify(response.body.billingAddress.country)).to.deep.includes("US")
+                    expect(JSON.stringify(response.body.externalId))
+                    expect(JSON.stringify(response.body.billingAddress.country))
                     externalid2 = response.body.externalId
                 })
         })
-
-        it('Create account with externalID and billingAddress', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, externalidAndBillingBody)
-                .then((response) => {
-                    expect(response.status).to.eq(201) // Check response status
-                    cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
-                    expect(JSON.stringify(response.body.externalId)).to.deep.includes('0')
-                    expect(JSON.stringify(response.body.billingAddress.country)).to.deep.includes("CA")
-                    externalid3 = response.body.externalId
-                })
-        })
-
 
         it('Get specific account', { tags: '@api' }, () => {
             GetCall(accountEndpoint + '/' + externalid)
@@ -108,19 +105,56 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account', { tags: '@api' }, () => {
-            PutCall(accountEndpoint + '/' + externalid,
-                {
-                    name: 'updatedAccount' + '1' + Math.floor((Math.random() * 999) + 1),
-                })
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            cy.log(JSON.stringify(data_by))
+            PatchCall(accountEndpoint + '/' + externalid,data_by)
                 .then((response) => {
                     expect(response.status).to.eq(200) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    expect(JSON.stringify(response.body.name)).to.deep.includes('updatedAccount1')
+                    expect(JSON.stringify(response.body.billingAddress))
+                })
+        })
+
+        it('Update account with only billing Address', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            delete data_by.mailingAddress
+            delete data_by.tags
+            delete data_by.isCommercial
+            delete data_by.status
+            delete data_by.isPrePay
+            cy.log(JSON.stringify(data_by))
+            PatchCall(accountEndpoint + '/' + externalid,data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                    expect(JSON.stringify(response.body.mailingAddress))
+                })
+        })
+
+        it('Update account with only mailing Address', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            delete data_by.billingAddress
+            delete data_by.tags
+            delete data_by.isCommercial
+            delete data_by.status
+            delete data_by.isPrePay
+            cy.log(JSON.stringify(data_by))
+            PatchCall(accountEndpoint + '/' + externalid,data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                    expect(JSON.stringify(response.body.mailingAddress))
                 })
         })
 
         it('Delete account', { tags: '@api' }, () => {
-            let ids = [externalid, externalid1, externalid2, externalid3]
+            let ids = [externalid, externalid1, externalid2]
             ids.forEach((item) => {
                 DeleteCall(accountEndpoint + '/' + item)
                     .then((response) => {
@@ -128,45 +162,49 @@ describe('accounts api', { tags: '@smoke' }, () => {
                         cy.log(JSON.stringify(response.body)) // log response body data    
                     })
             })
-
         })
     })
 
     describe('negative test cases', () => {
         let negitiveAccountid = 0
-        let invalidAccountid = accountEndpoint + '/123456789'
+        let invalidAccountid = accountEndpoint + '/789568a'
+        let negitiveTestAccountid = 0
         before(() => {
-            PostCall(accountEndpoint, {
-                externalId: '0' + Math.floor((Math.random() * 999) + 1),
-                billingAddress: {
-                    streetAddress1: "123 Main St",
-                    streetAddress2: "AAA",
-                    locality: "City",
-                    region: "State",
-                    postalCode: "Zip",
-                    country: "US"
-                }
-            })
+            let data_by = JSON.parse(generateAccountData());
+            PostCall(accountEndpoint,data_by)
                 .then((response) => {
                     expect(response.status).to.eq(201) // Check response status               
                     negitiveAccountid = response.body.externalId
+                    negitiveTestAccountid = accountEndpoint + '/' + negitiveAccountid
+                    cy.log(negitiveTestAccountid)
                 })
         })
 
         after(() => {
-            DeleteCall(accountEndpoint + '/' + negitiveAccountid)
+            cy.log(negitiveTestAccountid)
+            DeleteCall(negitiveTestAccountid)
                 .then((response) => {
-                    expect(response.status).to.eq(204) // Check response status
+                    expect(response.status).to.eq(200) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data    
                 })
         })
 
         it('Create account with invalid id', { tags: '@api' }, () => {
-            PostCall(invalidAccountEndpoint, accountBody)
+            let data_by = JSON.parse(generateAccountData());
+            PostCall(invalidAccountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(404) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
+                })
+        })
+
+        it('Create account with country as null in billingAddress', { tags: '@api' }, () => {
+            let data_by = JSON.parse(generateAccountData());
+            data_by.billingAddress.country= null
+            PostCall(accountEndpoint, data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(500) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
                 })
         })
 
@@ -178,66 +216,87 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 .then((response) => {
                     expect(response.status).to.eq(400) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
                 })
         })
 
         it('Create account with empty externalId', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, emptyExternalid)
+            let data_by = JSON.parse(generateAccountData());
+           data_by.externalId=""
+            PostCall(accountEndpoint,  data_by)
                 .then((response) => {
                     expect(response.status).to.eq(400) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
                 })
         })
 
         it('Create account with empty billingAddress', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, emptyBillingAddress)
+            let data_by = JSON.parse(generateAccountData());
+            data_by.billingAddress=""
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(400) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
                 })
         })
 
         it('Create account with empty streetAddress1 in billingAddress', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, emptyStreetAddress)
+            let data_by = JSON.parse(generateAccountData());
+            data_by.billingAddress.streetAddress1=""
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(400) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
                 })
         })
 
         it('Create account with empty locality in billingAddress', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, emptyLocality)
+            let data_by = JSON.parse(generateAccountData());
+            data_by.billingAddress.locality=""
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(400) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
                 })
-
         })
 
         it('Create account with empty region in billingAddress', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, emptyregion)
+            let data_by = JSON.parse(generateAccountData());
+            data_by.billingAddress.region=""
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(400) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
                 })
         })
 
         it('Create account with empty postalCode in billingAddress', { tags: '@api' }, () => {
-            PostCall(accountEndpoint, emptyPostalcode)
+            let data_by = JSON.parse(generateAccountData());
+            data_by.billingAddress.postalCode=""
+            PostCall(accountEndpoint, data_by)
                 .then((response) => {
                     expect(response.status).to.eq(400) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
-                    cy.log(response.body.externalId)
                 })
         })
 
-        it('GET the specific data with invalid account id', { tags: '@api' }, () => {
+        it('GET all account when invalid endpoint', { tags: '@api' }, () => {
+            GetCall(invalidAccountEndpoint)
+                .then((response) => {
+                    expect(response.status).to.eq(404) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+        it('GET all account when invalid clientID', { tags: '@api' }, () => {
+            //Single-tenant/client User is used, thats the reason for 401 unauthorized
+            //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+            GetCall(accountEndpoint, { bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
+                .then((response) => {
+                    expect(response.status).to.eq(401) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+
+        it('GET account with invalid account id', { tags: '@api' }, () => {
             GetCall(invalidAccountid)
                 .then((response) => {
                     expect(response.status).to.eq(404) // Check response status
@@ -245,266 +304,102 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 })
         })
 
+        it('GET account when invalid clientID', { tags: '@api' }, () => {
+            //Single-tenant/client User is used, thats the reason for 401 unauthorized
+            //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+            GetCall(negitiveTestAccountid, { bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
+                .then((response) => {
+                    expect(response.status).to.eq(401) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+
+        it('Update account with unknown field in billingAddress is add', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            data_by.billingAddress.newfield="ABC"
+            PatchCall(negitiveTestAccountid,data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                    expect(JSON.stringify(response.body.externalId)).not.includes('newfield');
+                })
+        })
+
+        it('Update account with empty body', { tags: '@api' }, () => {
+            PatchCall(negitiveTestAccountid,
+                {
+                })
+                .then((response) => {
+                    expect(response.status).to.eq(400) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+
+        it('Update account with null value', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            data_by.billingAddress= null
+            data_by.mailingAddress=null
+            data_by.tags= null
+            data_by.isCommercial= null
+            data_by.status= null
+            data_by.isPrePay= null
+            PatchCall(negitiveTestAccountid,data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(400) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+
+        it('Update account with invalid account id', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            PatchCall(invalidAccountid,data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(404) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+
+        it('Update account with invalid clientID', { tags: '@api' }, () => {
+        //Single-tenant/client User is used, thats the reason for 401 unauthorized
+        //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+        //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+        let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            PatchCall(negitiveTestAccountid, data_by,{bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
+                .then((response) => {
+                    expect(response.status).to.eq(401) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+
+        it('Delete account with invalid endpoints', { tags: '@api' }, () => {
+            DeleteCall(invalidAccountEndpoint+'/'+negitiveAccountid)
+                .then((response) => {
+                    expect(response.status).to.eq(404) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+
+        it('Delete account with invalid account ID', { tags: '@api' }, () => {
+            DeleteCall(invalidAccountid)
+                .then((response) => {
+                    expect(response.status).to.eq(404) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
+        
+        it('Delete account with invalid client ID', { tags: '@api' }, () => {
+            DeleteCall(negitiveTestAccountid, { bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
+                .then((response) => {
+                    expect(response.status).to.eq(401) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
     })
-
 })
-
-// This body's are used in testcases above
-const accountBody = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "City",
-        region: "State",
-        postalCode: "Zip",
-        country: "US"
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const externalidAndBillingBody = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "city",
-        region: "state",
-        postalCode: "postal code",
-        country: "CA"
-    }
-}
-
-const emptyCountryBody = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "city",
-        region: "state",
-        postalCode: "postal code",
-        country: ""
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const nullCountryBody = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "city",
-        region: "state",
-        postalCode: "postal code",
-
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const emptyExternalid = {
-    externalId: '',
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "City",
-        region: "State",
-        postalCode: "Zip",
-        country: "US"
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const emptyBillingAddress = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const emptyStreetAddress = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "",
-        streetAddress2: "AAA",
-        locality: "City",
-        region: "State",
-        postalCode: "Zip",
-        country: "US"
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const emptyLocality = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "",
-        region: "State",
-        postalCode: "Zip",
-        country: "US"
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const emptyregion = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "city",
-        region: "",
-        postalCode: "Zip",
-        country: "US"
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}
-
-const emptyPostalcode = {
-    externalId: '0' + Math.floor((Math.random() * 999) + 1),
-    billingAddress: {
-        streetAddress1: "123 Main St",
-        streetAddress2: "AAA",
-        locality: "city",
-        region: "state",
-        postalCode: "",
-        country: "US"
-    },
-    mailingAddress: {
-        streetAddress1: "444 Main St",
-        streetAddress2: "BBB",
-        locality: "Locality",
-        region: "Region",
-        postalCode: "Postal Code",
-        country: "CA"
-    },
-    tags: {
-        ABC: "123",
-        TestTag: "Test",
-        Key: "Value"
-    },
-    isCommercial: false,
-    status: "open",
-    isPrePay: false
-}

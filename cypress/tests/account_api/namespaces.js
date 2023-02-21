@@ -1,10 +1,9 @@
-import { env as _env, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint, invalidNamespaceid, invalidAccountEndpoint } from '../utils.js';
+import { env as _env, _auth, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint, invalidKUBRAclientId} from '../utils.js';
 let namespaceid = 0;
 
 describe('CRUD operations', { tags: '@smoke' }, () => {
 
     it('Create namespace', { tags: '@api' }, () => {
-
         PostCall(namespacesEndpoint,namespaceBody)
             .then((response) => {
                 expect(response.status).to.eq(201) // Check response status
@@ -82,27 +81,36 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
         DeleteCall(namespacesEndpoint + '/' + namespaceid)
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
-                cy.log(JSON.stringify(response.body)) // log response body data    
+                cy.log(JSON.stringify(response.body)) // log response body data
             })
     })
 })
 
 describe('Negetive tests', () => {
-    let negitiveNamespaceid = 0
+    let namespaceid1 = 0
+    let invalidNamespaceid = namespacesEndpoint + '/1a5f1e74-2646-4703-b2e0-557efbb12345'
+    let negitiveTestNamespaceid =0
+
     before(() => {
         PostCall(namespacesEndpoint,namespaceBody)
             .then((response) => {
-                expect(response.status).to.eq(201) // Check response status               
-                negitiveNamespaceid = response.body.id
-                cy.log(negitiveNamespaceid)
+                expect(response.status).to.eq(201) // Check response status
+                namespaceid1 = response.body.id
+                negitiveTestNamespaceid = namespacesEndpoint + '/' + namespaceid1
+                cy.log(negitiveTestNamespaceid)
             })
+        GetCall(namespacesEndpoint)
+        .then((response) => {
+            expect(response.status).to.eq(200) // Check response status
+            cy.log(JSON.stringify(response.body)) // log response body data
+        })
     })
 
     after(() => {
-        DeleteCall(namespacesEndpoint + '/' + negitiveNamespaceid)
+        DeleteCall(negitiveTestNamespaceid)
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
-                cy.log(JSON.stringify(response.body)) // log response body data    
+                cy.log(JSON.stringify(response.body)) // log response body data
             })
     })
 
@@ -110,7 +118,7 @@ describe('Negetive tests', () => {
         PostCall(invalidNamespacesEndpoint,namespaceBody)
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
-                cy.log(JSON.stringify(response.body)) // log response body data  
+                cy.log(JSON.stringify(response.body)) // log response body data
             })
     })
 
@@ -122,11 +130,11 @@ describe('Negetive tests', () => {
             })
             .then((response) => {
                 expect(response.status).to.eq(400) // Check response status
-                cy.log(JSON.stringify(response.body)) // log response body data  
+                cy.log(JSON.stringify(response.body)) // log response body data
             })
     })
 
-    it('GET all balancefeed when invalid endpoint', { tags: '@api' }, () => {
+    it('GET all namespaces when invalid endpoint', { tags: '@api' }, () => {
         GetCall(invalidNamespacesEndpoint)
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
@@ -134,7 +142,17 @@ describe('Negetive tests', () => {
             })
     })
 
-    it('GET the specific data with invalid namespace id', { tags: '@api' }, () => {
+    it('GET all namespaces when invalid clientID', { tags: '@api' }, () => {
+        //the credentials used has Single-tenant/client User, thats the reason for 401 unauthorized
+        //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+        GetCall(namespacesEndpoint, { bearer: `${Cypress.env("DefaultAuth0Token")}`} , invalidKUBRAclientId)
+            .then((response) => {
+                expect(response.status).to.eq(401) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+
+    it('GET namespace with invalid namespace id', { tags: '@api' }, () => {
         GetCall(invalidNamespaceid)
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
@@ -142,8 +160,18 @@ describe('Negetive tests', () => {
             })
     })
 
+    it('GET namespace when invalid clientID', { tags: '@api' }, () => {
+        //Single-tenant/client User is used, thats the reason for 401 unauthorized
+        //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+        GetCall(negitiveTestNamespaceid, { bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
+            .then((response) => {
+                expect(response.status).to.eq(401) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+
     it('Update namespace with unknown field is add', { tags: '@api' }, () => {
-        PatchCall(namespacesEndpoint + '/' + negitiveNamespaceid,unknownfieldNamespace)
+        PatchCall(negitiveTestNamespaceid,unknownfieldNamespace)
             .then((response) => {
                 expect(response.status).to.eq(400) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
@@ -154,9 +182,8 @@ describe('Negetive tests', () => {
     })
 
     it('Update namespace with empty body', { tags: '@api' }, () => {
-        PatchCall(namespacesEndpoint + '/' + negitiveNamespaceid,
+        PatchCall(negitiveTestNamespaceid,
             {
-
             })
             .then((response) => {
                 expect(response.status).to.eq(400) // Check response status
@@ -168,7 +195,7 @@ describe('Negetive tests', () => {
     })
 
     it('Update namespace with null value', { tags: '@api' }, () => {
-        PatchCall(namespacesEndpoint + '/' + negitiveNamespaceid,nullFieldNamespace)
+        PatchCall(negitiveTestNamespaceid,nullFieldNamespace)
             .then((response) => {
                 expect(response.status).to.eq(400) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
@@ -178,8 +205,6 @@ describe('Negetive tests', () => {
             })
     })
 
-
-
     it('Update namespace with invalid namespace id', { tags: '@api' }, () => {
         PatchCall(invalidNamespaceid,patchNamespaceBody)
             .then((response) => {
@@ -188,11 +213,21 @@ describe('Negetive tests', () => {
             })
     })
 
+    it('Update namespace with invalid clientID', { tags: '@api' }, () => {
+        //Single-tenant/client User is used, thats the reason for 401 unauthorized
+        //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+        PatchCall(negitiveTestNamespaceid, patchNamespaceBody,{ bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
+            .then((response) => {
+                expect(response.status).to.eq(401) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+
     it('Delete namespace with invalid endpoints', { tags: '@api' }, () => {
-        DeleteCall(invalidNamespacesEndpoint + '/' + negitiveNamespaceid)
+        DeleteCall(invalidNamespacesEndpoint + '/' + namespaceid1)
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
-                cy.log(JSON.stringify(response.body)) // log response body data    
+                cy.log(JSON.stringify(response.body)) // log response body data
             })
     })
 
@@ -200,7 +235,18 @@ describe('Negetive tests', () => {
         DeleteCall(invalidNamespaceid)
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
-                cy.log(JSON.stringify(response.body)) // log response body data    
+                cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+    
+    it('Delete namespace with invalid client ID', { tags: '@api' }, () => {
+        //Single-tenant/client User is used, thats the reason for 401 unauthorized
+        //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
+        cy.log(invalidKUBRAclientId)
+        DeleteCall(negitiveTestNamespaceid,{ bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
+            .then((response) => {
+                expect(response.status).to.eq(401) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
             })
     })
 })
@@ -211,23 +257,19 @@ const namespaceBody = {
     description: "Description",
     defaultCountry: "US"
 }
-
 const patchNamespaceBody = {
     name: 'patchUpdatedNamespace' + '0' + Math.floor((Math.random() * 999) + 1),
     description: "patch description",
     defaultCountry: "CA"
 }
-
 const unknownfieldNamespace = {
     name: 'patchUpdatedNamespace' + '0' + Math.floor((Math.random() * 999) + 1),
     description: "patch description",
     defaultCountry: "CA",
     newField:"unknown"
 }
-
 const nullFieldNamespace ={
     name: null,
     description: null,
     defaultCountry: null
-
 }
