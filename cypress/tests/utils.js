@@ -7,6 +7,7 @@ export const contenttype = "application/json"
 export const patchContentType ="application/merge-patch+json"
 export const KUBRAclientId = 'a8c2b204-1563-4a9a-9581-72f0cf71e5ef'
 export const invalidKUBRAclientId = 'a8c2b204-1563-4a9a-9581-72f0cf71234'
+export const KubraDemoClientID = '14f2ddd8-b942-4e01-9a1a-c1dcdc261573'
 export const namespacesEndpoint = host + '/account/v1/namespaces'
 export const invalidNamespaceid = host + '/account/v1/namespaces/bc9ec323-153b-4872-98d7-233f57ba1234'
 export const invalidNamespacesEndpoint = host + '/account/v1/namespaces-s'
