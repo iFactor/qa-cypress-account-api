@@ -2,6 +2,7 @@ import { env as _env, generateAccountData, PostCall, GetCall, PatchCall, DeleteC
 let externalid = 0;
 let externalid1 = 0;
 let externalid2 = 0;
+let externalid3 = 0;
 let namespaceid = 0;
 let namespacesid2 = 0;
 let accountEndpoint = 0;
@@ -119,6 +120,21 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 })
         })
 
+        it('Create account with mailling address as null', { tags: '@api' }, () => {
+            let data_by = JSON.parse(generateAccountData());
+            data_by.mailingAddress = null
+           cy.log(JSON.stringify(data_by))
+            PostCall(accountEndpoint, data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(201) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                    cy.log(response.body.externalId)
+                    expect(JSON.stringify(response.body.externalId))
+                    expect(JSON.stringify(response.body.billingAddress.country))
+                    externalid3 = response.body.externalId
+                })
+        })
+
         it('Get specific account', { tags: '@api' }, () => {
             GetCall(accountEndpoint + '/' + externalid)
                 .then((response) => {
@@ -184,8 +200,21 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 })
         })
 
+        it('Update account with only mailing Address', { tags: '@api' }, () => {
+            //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
+            let data_by = JSON.parse(generateAccountData());
+            delete data_by.externalId
+            cy.log(JSON.stringify(data_by))
+            PatchCall(accountEndpoint + '/' + externalid3,data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                    expect(JSON.stringify(response.body.mailingAddress))
+                })
+        })
+
         it('Delete account', { tags: '@api' }, () => {
-            let ids = [externalid, externalid1, externalid2]
+            let ids = [externalid, externalid1, externalid2, externalid3]
             ids.forEach((item) => {
                 DeleteCall(accountEndpoint + '/' + item)
                     .then((response) => {
