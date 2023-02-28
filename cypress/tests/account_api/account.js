@@ -1,9 +1,11 @@
-import { env as _env, generateAccountData, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidAccountEndpoint, invalidKUBRAclientId } from '../utils.js'
+import { env as _env, generateAccountData, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidAccountEndpoint, invalidKUBRAclientId, KubraDemoClientID } from '../utils.js'
 let externalid = 0;
 let externalid1 = 0;
 let externalid2 = 0;
 let namespaceid = 0;
+let namespacesid2 = 0;
 let accountEndpoint = 0;
+let accountEndpoint2 = 0;
 
 describe('accounts api', { tags: '@smoke' }, () => {
 
@@ -26,6 +28,24 @@ describe('accounts api', { tags: '@smoke' }, () => {
     })
 
     before(() => {
+        PostCall(namespacesEndpoint,
+            {
+                name: 'namespacesDemoclient' + '0' + Math.floor((Math.random() * 999) + 1),
+                description: "Description",
+                defaultCountry: "US"
+            }, {bearer: `${Cypress.env("DefaultAuth0Token")}`},
+            // ClientId which contains empty namespaces in it
+            KubraDemoClientID )
+            .then((response) => {
+                expect(response.status).to.eq(201) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+                namespacesid2 = response.body.id
+                cy.log(namespacesid2)
+                accountEndpoint2 = namespacesEndpoint + '/' + namespacesid2 + '/accounts'
+            })
+    })
+
+    before(() => {
         cy.log(`account endpoint is ${accountEndpoint}`)
         expect(accountEndpoint).to.include('account');
     })
@@ -33,6 +53,17 @@ describe('accounts api', { tags: '@smoke' }, () => {
     after(() => {
         if (namespaceid != '') {
             DeleteCall(namespacesEndpoint + '/' + namespaceid)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status                   
+                })
+        }
+    })
+
+    after(() => {
+        if (namespacesid2 != '') {
+            DeleteCall(namespacesEndpoint + '/' + namespacesid2, {bearer: `${Cypress.env("DefaultAuth0Token")}`},
+            // ClientId which contains empty namespaces in it
+            KubraDemoClientID)
                 .then((response) => {
                     expect(response.status).to.eq(200) // Check response status                   
                 })
@@ -163,11 +194,22 @@ describe('accounts api', { tags: '@smoke' }, () => {
                     })
             })
         })
+
+        it('Get all account which has empty data in it', { tags: '@api' }, () => {
+            GetCall(accountEndpoint2,
+                {bearer: `${Cypress.env("DefaultAuth0Token")}`},
+                // ClientId which contains empty namespaces in it
+                KubraDemoClientID)
+                .then((response) => {
+                    expect(response.status).to.eq(204) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                })
+        })
     })
 
     describe('negative test cases', () => {
         let negitiveAccountid = 0
-        let invalidAccountid = accountEndpoint + '/789568a'
+        let invalidAccountid = accountEndpoint + '/2e791d92-26f4-4000-a5dd-34f5c8f655ed'
         let negitiveTestAccountid = 0
         before(() => {
             let data_by = JSON.parse(generateAccountData());
@@ -287,11 +329,9 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 })
         })
         it('GET all account when invalid clientID', { tags: '@api' }, () => {
-            //Single-tenant/client User is used, thats the reason for 401 unauthorized
-            //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
             GetCall(accountEndpoint, { bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
                 .then((response) => {
-                    expect(response.status).to.eq(401) // Check response status
+                    expect(response.status).to.eq(404) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
                 })
         })
@@ -305,11 +345,9 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('GET account when invalid clientID', { tags: '@api' }, () => {
-            //Single-tenant/client User is used, thats the reason for 401 unauthorized
-            //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
             GetCall(negitiveTestAccountid, { bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
                 .then((response) => {
-                    expect(response.status).to.eq(401) // Check response status
+                    expect(response.status).to.eq(404) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
                 })
         })
@@ -357,7 +395,9 @@ describe('accounts api', { tags: '@smoke' }, () => {
         it('Update account with invalid account id', { tags: '@api' }, () => {
             //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
+            invalidAccountid = accountEndpoint + '/789568a'
             delete data_by.externalId
+            cy.log(invalidAccountid)
             PatchCall(invalidAccountid,data_by)
                 .then((response) => {
                     expect(response.status).to.eq(404) // Check response status
@@ -366,14 +406,12 @@ describe('accounts api', { tags: '@smoke' }, () => {
         })
 
         it('Update account with invalid clientID', { tags: '@api' }, () => {
-        //Single-tenant/client User is used, thats the reason for 401 unauthorized
-        //if the credentials have Multi-tenant/client User, Then the status code is 404 not found
         //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
         let data_by = JSON.parse(generateAccountData());
             delete data_by.externalId
             PatchCall(negitiveTestAccountid, data_by,{bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
                 .then((response) => {
-                    expect(response.status).to.eq(401) // Check response status
+                    expect(response.status).to.eq(404) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
                 })
         })
@@ -397,7 +435,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
         it('Delete account with invalid client ID', { tags: '@api' }, () => {
             DeleteCall(negitiveTestAccountid, { bearer: `${Cypress.env("DefaultAuth0Token")}`}, invalidKUBRAclientId)
                 .then((response) => {
-                    expect(response.status).to.eq(401) // Check response status
+                    expect(response.status).to.eq(404) // Check response status
                     cy.log(JSON.stringify(response.body)) // log response body data
                 })
         })
