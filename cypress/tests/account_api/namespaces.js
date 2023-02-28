@@ -1,4 +1,4 @@
-import { env as _env, _auth, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint, invalidKUBRAclientId} from '../utils.js';
+import { env as _env, _auth, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint, invalidKUBRAclientId, KubraDemoClientID} from '../utils.js';
 let namespaceid = 0;
 
 describe('CRUD operations', { tags: '@smoke' }, () => {
@@ -81,6 +81,17 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
         DeleteCall(namespacesEndpoint + '/' + namespaceid)
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+
+    it('Get all namespace which has empty data in it', { tags: '@api' }, () => {
+        GetCall(namespacesEndpoint,
+            {bearer: `${Cypress.env("DefaultAuth0Token")}`},
+            // ClientId which contains empty namespaces in it
+            KubraDemoClientID)
+            .then((response) => {
+                expect(response.status).to.eq(204) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
             })
     })
