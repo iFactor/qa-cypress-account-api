@@ -421,6 +421,17 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 })
         })
 
+        it('Update account with external ID added in body', { tags: '@api' }, () => {
+            let data_by = JSON.parse(generateAccountData());
+            cy.log(data_by.externalId)
+            PatchCall(negitiveTestAccountid,data_by)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data
+                    expect(JSON.stringify(response.body.externalId)).to.deep.includes(negitiveAccountid)
+                })
+        })
+
         it('Update account with invalid account id', { tags: '@api' }, () => {
             //externalID is deleted as the generateAccountData generates a new externalID all the time which is not neccessary for this call
             let data_by = JSON.parse(generateAccountData());
