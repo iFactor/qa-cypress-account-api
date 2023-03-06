@@ -35,7 +35,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
                 description: "Description",
                 defaultCountry: "US"
             }, {bearer: `${Cypress.env("DefaultAuth0Token")}`},
-            // ClientId which contains empty namespaces in it
+            // ClientId which contains empty namespaces in it, Creating the Namespace for 1 test validation
             KubraDemoClientID )
             .then((response) => {
                 expect(response.status).to.eq(201) // Check response status
@@ -63,7 +63,7 @@ describe('accounts api', { tags: '@smoke' }, () => {
     after(() => {
         if (namespacesid2 != '') {
             DeleteCall(namespacesEndpoint + '/' + namespacesid2, {bearer: `${Cypress.env("DefaultAuth0Token")}`},
-            // ClientId which contains empty namespaces in it
+            // ClientId should contains empty namespaces in it, So deleting Namespace after test is completed.
             KubraDemoClientID)
                 .then((response) => {
                     expect(response.status).to.eq(200) // Check response status                   
