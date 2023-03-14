@@ -1,8 +1,10 @@
-import { env as _env, _auth, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint, invalidKUBRAclientId, KubraDemoClientID} from '../utils.js';
-let namespaceid = 0;
+import { env as _env, _auth, PostCall, GetCall, PatchCall, DeleteCall, namespacesEndpoint, invalidNamespacesEndpoint, invalidKUBRAclientId, KubraDemoClientID, generateUUID} from '../utils.js';
+let namespaceid1 = 0;
+let namespaceid2 = 0;
+let namespaceid3 = 0;
+let datafeedId = generateUUID();
 
 describe('CRUD operations', { tags: '@smoke' }, () => {
-
     it('Create namespace', { tags: '@api' }, () => {
         PostCall(namespacesEndpoint,namespaceBody)
             .then((response) => {
@@ -10,12 +12,12 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
                 cy.log(JSON.stringify(response.body)) // log response body data
                 cy.log(response.body.id)
                 expect(JSON.stringify(response.body.name)).to.deep.includes('namespace0')
-                namespaceid = response.body.id
+                namespaceid1 = response.body.id
             })
     })
 
     it('Get specific namespace', { tags: '@api' }, () => {
-        GetCall(namespacesEndpoint + '/' + namespaceid)
+        GetCall(namespacesEndpoint + '/' + namespaceid1)
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
@@ -31,7 +33,7 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
     })
 
     it('Update namespace', { tags: '@api' }, () => {
-        PatchCall(namespacesEndpoint + '/' + namespaceid,patchNamespaceBody)
+        PatchCall(namespacesEndpoint + '/' + namespaceid1,patchNamespaceBody)
             .then((response) => {
                 expect(response.status).to.eq(200) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
@@ -42,7 +44,7 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
     })
 
     it('Update namespace with only name field in the body', { tags: '@api' }, () => {
-        PatchCall(namespacesEndpoint + '/' + namespaceid,
+        PatchCall(namespacesEndpoint + '/' + namespaceid1,
             {
                 name: 'patchUpdatedNamespace' + '0' + Math.floor((Math.random() * 999) + 1)
             })
@@ -54,7 +56,7 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
     })
 
     it('Update namespace with only description field in the body', { tags: '@api' }, () => {
-        PatchCall(namespacesEndpoint + '/' + namespaceid,
+        PatchCall(namespacesEndpoint + '/' + namespaceid1,
             {
                 description: "test description"
             })
@@ -66,7 +68,7 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
     })
 
     it('Update namespace with only default country field in the body', { tags: '@api' }, () => {
-        PatchCall(namespacesEndpoint + '/' + namespaceid,
+        PatchCall(namespacesEndpoint + '/' + namespaceid1,
             {
                 defaultCountry: "CA"
             })
@@ -77,12 +79,12 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
             })
     })
 
-    it('Delete namespace', { tags: '@api' }, () => {
-        DeleteCall(namespacesEndpoint + '/' + namespaceid)
-            .then((response) => {
-                expect(response.status).to.eq(200) // Check response status
-                cy.log(JSON.stringify(response.body)) // log response body data
-            })
+    it('Delete account', { tags: '@api' }, () => {
+            DeleteCall(namespacesEndpoint + '/' + namespaceid1)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data    
+                })
     })
 
     it('Get all namespace which has empty data in it', { tags: '@api' }, () => {
@@ -97,8 +99,61 @@ describe('CRUD operations', { tags: '@smoke' }, () => {
     })
 })
 
+describe('Namespace CRUD with DatafeedID field in the body',() => {
+
+    it('Create namespace with DatafeedID', { tags: '@api' }, () => {
+        PostCall(namespacesEndpoint,namespaceBodywithDatafeedID)
+            .then((response) => {
+                expect(response.status).to.eq(201) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+                cy.log(response.body.id)
+                expect(JSON.stringify(response.body.name)).to.deep.includes('namespaceWithDatafeedID0')
+                expect(JSON.stringify(response.body.datafeedId)).to.deep.includes(datafeedId)
+                namespaceid2 = response.body.id
+            })
+    })
+
+    it('Get specific namespace with DatafeedID', { tags: '@api' }, () => {
+        GetCall(namespacesEndpoint + '/' + namespaceid2)
+            .then((response) => {
+                expect(response.status).to.eq(200) // Check response status
+                expect(JSON.stringify(response.body.datafeedId)).to.deep.includes(datafeedId)
+                cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+
+    it('Create namespace with DatafeedID as null', { tags: '@api' }, () => {
+        PostCall(namespacesEndpoint,{
+            name: 'namespaceWithDatafeedID' + '0' + Math.floor((Math.random() * 999) + 1),
+            description: "Description",
+            defaultCountry: "US",
+            datafeedId: null
+        })
+            .then((response) => {
+                expect(response.status).to.eq(201) // Check response status
+                cy.log(JSON.stringify(response.body)) // log response body data
+                expect(JSON.stringify(response.body.name)).to.deep.includes('namespaceWithDatafeedID0')
+                expect(JSON.stringify(response.body.datafeedId)).to.deep.includes(null)
+                cy.log(response.body.id)
+                namespaceid3 = response.body.id
+            })
+    })
+    
+    it('Delete account', { tags: '@api' }, () => {
+        let ids = [namespaceid2,namespaceid3]
+            ids.forEach((namespaceItem) => {
+                DeleteCall(namespacesEndpoint + '/' + namespaceItem)
+                .then((response) => {
+                    expect(response.status).to.eq(200) // Check response status
+                    cy.log(JSON.stringify(response.body)) // log response body data    
+                })
+            })    
+    })
+
+})
+
 describe('Negetive tests', () => {
-    let namespaceid1 = 0
+    let namespaceNtestId = 0
     let invalidNamespaceid = namespacesEndpoint + '/1a5f1e74-2646-4703-b2e0-557efbb12345'
     let negitiveTestNamespaceid =0
 
@@ -106,8 +161,8 @@ describe('Negetive tests', () => {
         PostCall(namespacesEndpoint,namespaceBody)
             .then((response) => {
                 expect(response.status).to.eq(201) // Check response status
-                namespaceid1 = response.body.id
-                negitiveTestNamespaceid = namespacesEndpoint + '/' + namespaceid1
+                namespaceNtestId = response.body.id
+                negitiveTestNamespaceid = namespacesEndpoint + '/' + namespaceNtestId
                 cy.log(negitiveTestNamespaceid)
             })
         GetCall(namespacesEndpoint)
@@ -142,6 +197,21 @@ describe('Negetive tests', () => {
             .then((response) => {
                 expect(response.status).to.eq(400) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
+            })
+    })
+
+    it('Create Namespaceid with datafeedID as invalid UUID format', { tags: '@api' }, () => {
+        PostCall(namespacesEndpoint,{
+            name: 'namespaceWithDatafeedID' + '0' + Math.floor((Math.random() * 999) + 1),
+            description: "Description",
+            defaultCountry: "US",
+            datafeedId: "1a2b3c4d5e6f7g8h9"
+        })
+            .then((response) => {
+                expect(response.status).to.eq(400) // Check response status
+                cy.log(JSON.stringify(response.body))
+                expect(JSON.stringify(response.body)).to.deep.includes("Datafeed ID '1a2b3c4d5e6f7g8h9' is invalid. A UUID is expected.")
+        
             })
     })
 
@@ -236,7 +306,7 @@ describe('Negetive tests', () => {
     })
 
     it('Delete namespace with invalid endpoints', { tags: '@api' }, () => {
-        DeleteCall(invalidNamespacesEndpoint + '/' + namespaceid1)
+        DeleteCall(invalidNamespacesEndpoint + '/' + namespaceNtestId)
             .then((response) => {
                 expect(response.status).to.eq(404) // Check response status
                 cy.log(JSON.stringify(response.body)) // log response body data
@@ -269,6 +339,14 @@ const namespaceBody = {
     description: "Description",
     defaultCountry: "US"
 }
+
+const namespaceBodywithDatafeedID = {
+    name: 'namespaceWithDatafeedID' + '0' + Math.floor((Math.random() * 999) + 1),
+    description: "Description",
+    defaultCountry: "US",
+    datafeedId: datafeedId
+}
+
 const patchNamespaceBody = {
     name: 'patchUpdatedNamespace' + '0' + Math.floor((Math.random() * 999) + 1),
     description: "patch description",
